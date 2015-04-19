@@ -111,21 +111,16 @@ def main(argv):
 
 		# Make some predictions using the newly trained model.
 		print_header('Making some predictions')
-		results = []
+		csvwriter = csv.writer(open('results.csv', 'wb'))
 		for row in csv.reader(open('test.csv','r')):
 			body = {'input': {'csvInstance': row}}
 			result = papi.predict(
 				body=body, id=flags.model_id, project=flags.project_id).execute()
-			#print('Prediction results for "%s"...' % row)
-			#pprint.pprint(result)
-			results += [result["outputValue"]]
-
-		#Save Results
-		print_header('Saving Results')
-		with open('results.csv', 'wb') as f:
-			csvwriter = csv.writer(f)
-			for i in range(len(results)):
-				csvwriter.writerow(results[i])
+			print('Prediction results for "%s"...' % row)
+			pprint.pprint(result)
+			csvwriter.writerow([result])
+			if (len(results) >= 10):
+				break
 
 		# Delete model.
 		print_header('Deleting model')
