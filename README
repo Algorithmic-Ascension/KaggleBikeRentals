@@ -1,0 +1,11 @@
+We start with trainRaw.csv and testRaw.csv, we run 
+python transform.py
+To generate labeledTestSet.csv unlabeledTestSet.csv partialTrainingSet.csv completeDataSet.csv
+
+After generating the client_secrets.json and placing it in the directory, we run the following line to call on the Prediction API
+python gpredictions.py whateveryourbucketis/trainingsetname.csv modelname projectid
+which writes to results.csv and is written in such as way as to record even when quota is met during runtime
+
+And after results are recorded, we run
+python resultsPNG.py
+to get the error graph

@@ -1,8 +1,8 @@
 import csv
 import datetime as dt
-import random as r
+#import random as r
 
-r.seed(1337)
+#r.seed(1337)
 percentageOfDataToBeUsedAsTest = 0.1
 completeDataSet = [row for row in csv.reader(open('trainRaw.csv', 'r'))]
 # the application is forecasting, so sampling independently makes less sense here
