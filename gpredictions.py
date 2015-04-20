@@ -27,6 +27,7 @@ import pprint
 import sys
 import time
 import csv
+import matplotlib.pyplot as plt
 
 from apiclient import discovery
 from apiclient import sample_tools
@@ -112,20 +113,25 @@ def main(argv):
 		# Make some predictions using the newly trained model.
 		print_header('Making some predictions')
 		csvwriter = csv.writer(open('results.csv', 'wb'))
+		rateLimit = 1;
 		for row in csv.reader(open('test.csv','r')):
 			body = {'input': {'csvInstance': row}}
 			result = papi.predict(
 				body=body, id=flags.model_id, project=flags.project_id).execute()
 			print('Prediction results for "%s"...' % row)
 			pprint.pprint(result)
-			csvwriter.writerow([result])
-			if (len(results) >= 10):
+			csvwriter.writerow([result['outputValue']])
+			if rateLimit >1 :
+				rateLimit -= 1
+			else:
 				break
 
 		# Delete model.
 		print_header('Deleting model')
 		result = papi.delete(id=flags.model_id, project=flags.project_id).execute()
 		print('Model deleted.\n')
+		
+		
 
 	except client.AccessTokenRefreshError:
 		print ('The credentials have been revoked or expired, please re-run '
