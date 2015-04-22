@@ -65,15 +65,7 @@ def listModels(papi, flags):
 def trainThenWait(papi, flags):
 	# Start training request on a data set.
 	print_header('Submitting model training request')
-	train = [row for row in csv.reader(open('train.csv', 'r'))]
-	body = {
-		'id': flags.model_id, 
-		'storageDataLocation': flags.object_name,
-		"trainingInstances": [{
-			"output":t[-1], 
-			"csvInstance":t[:-1]
-		} for t in train]
-	}
+	body = {'id': flags.model_id, 'storageDataLocation': flags.object_name}
 	start = papi.insert(body=body, project=flags.project_id).execute()
 	print('Training results:')
 	pprint.pprint(start)
