@@ -2,7 +2,6 @@
 Simple command-line sample for the Google Prediction API
 judiciously borrowed from https://github.com/google/google-api-python-client/blob/master/samples/prediction/prediction.py
 
-
 Command-line application that trains on your input data. This sample does
 the same thing as the Hello Prediction! example. You might want to run
 the setup.sh script to load the sample data to Google Storage.
@@ -113,7 +112,6 @@ def main(argv):
 		# Make some predictions using the newly trained model.
 		print_header('Making some predictions')
 		csvwriter = csv.writer(open('results.csv', 'wb'))
-		#rateLimit = 1;
 		for row in csv.reader(open('labeledTestSet.csv','r')):
 			body = {'input': {'csvInstance': row}}
 			result = papi.predict(
@@ -121,10 +119,6 @@ def main(argv):
 			print('Prediction results for "%s"...' % row)
 			pprint.pprint(result)
 			csvwriter.writerow([result['outputValue']])
-			#if rateLimit >1 :
-			#	rateLimit -= 1
-			#else:
-			#	break
 
 		# Delete model.
 		print_header('Deleting model')
