@@ -33,7 +33,7 @@ from apiclient import sample_tools
 from oauth2client import client
 
 # Time to wait (in seconds) between successive checks of training status.
-SLEEP_TIME = 30
+SLEEP_TIME = 60
 
 
 # Declare command-line flags.
@@ -44,6 +44,8 @@ argparser.add_argument('model_id',
 		help='Model Id of your choosing to name trained model')
 argparser.add_argument('project_id',
 		help='Model Id of your choosing to name trained model')
+argparser.add_argument('api_call',
+		help='API call to make on your model')
 
 
 def print_header(line):
@@ -54,6 +56,78 @@ def print_header(line):
 	print(line)
 	print(header_line)
 	
+def listModels(papi, flags):
+	print_header('Fetching list of first ten models')
+	result = papi.list(maxResults=10, project=flags.project_id).execute()
+	print('List results:')
+	pprint.pprint(result)
+
+def trainThenWait(papi, flags):
+	# Start training request on a data set.
+	print_header('Submitting model training request')
+	train = [row for row in csv.reader(open('train.csv', 'r'))]
+	body = {
+		'id': flags.model_id, 
+		'storageDataLocation': flags.object_name,
+		"trainingInstances": [{
+			"output":t[-1], 
+			"csvInstance":t[:-1]
+		} for t in train]
+	}
+	start = papi.insert(body=body, project=flags.project_id).execute()
+	print('Training results:')
+	pprint.pprint(start)
+
+	# Wait for the training to complete.
+	print_header('Waiting for training to complete')
+	while True:
+		status = papi.get(id=flags.model_id, project=flags.project_id).execute()
+		state = status['trainingStatus']
+		print('Training state: ' + state)
+		if state == 'DONE':
+			break
+		elif state == 'RUNNING':
+			time.sleep(SLEEP_TIME)
+			continue
+		else:
+			raise Exception('Training Error: ' + state)
+
+		# Job has completed.
+		print('Training completed:')
+		pprint.pprint(status)
+		break
+
+def describeModel(papi, flags):
+	# Describe model.
+	print_header('Fetching model description')
+	result = papi.analyze(id=flags.model_id, project=flags.project_id).execute()
+	print('Analyze results:')
+	pprint.pprint(result)
+
+def makePredictions(papi, flags):
+	# Make some predictions using the newly trained model.
+	print_header('Making some predictions')
+	csvwriter = csv.writer(open('results.csv', 'wb'))
+	for row in csv.reader(open('labeledTestSet.csv','r')):
+		body = {'input': {'csvInstance': row}}
+		result = papi.predict(
+			body=body, id=flags.model_id, project=flags.project_id).execute()
+		print('Prediction results for "%s"...' % row)
+		pprint.pprint(result)
+		csvwriter.writerow([result['outputValue']])
+		
+def deleteModel(papi, flags):
+	# Delete model.
+	print_header('Deleting model')
+	result = papi.delete(id=flags.model_id, project=flags.project_id).execute()
+	print('Model deleted.')
+
+def everything(papi, flags):
+	listModels(papi, flags)
+	trainThenWait(papi, flags)
+	describeModel(papi, flags)
+	makePredictions(papi, flags)
+	deleteModel(papi, flags)
 
 def main(argv):
 	# If you previously ran this app with an earlier version of the API
@@ -69,63 +143,15 @@ def main(argv):
 	try:
 		# Get access to the Prediction API.
 		papi = service.trainedmodels()
-	
-		# List models.
-		print_header('Fetching list of first ten models')
-		result = papi.list(maxResults=10, project=flags.project_id).execute()
-		print('List results:')
-		pprint.pprint(result)
-
-		# Start training request on a data set.
-		print_header('Submitting model training request')
-		body = {'id': flags.model_id, 'storageDataLocation': flags.object_name}
-		print(body)
-		start = papi.insert(body=body, project=flags.project_id).execute()
-		print('Training results:')
-		pprint.pprint(start)
-
-		# Wait for the training to complete.
-		print_header('Waiting for training to complete')
-		while True:
-			status = papi.get(id=flags.model_id, project=flags.project_id).execute()
-			state = status['trainingStatus']
-			print('Training state: ' + state)
-			if state == 'DONE':
-				break
-			elif state == 'RUNNING':
-				time.sleep(SLEEP_TIME)
-				continue
-			else:
-				raise Exception('Training Error: ' + state)
-
-			# Job has completed.
-			print('Training completed:')
-			pprint.pprint(status)
-			break
-
-		# Describe model.
-		print_header('Fetching model description')
-		result = papi.analyze(id=flags.model_id, project=flags.project_id).execute()
-		print('Analyze results:')
-		pprint.pprint(result)
-
-		# Make some predictions using the newly trained model.
-		print_header('Making some predictions')
-		csvwriter = csv.writer(open('results.csv', 'wb'))
-		for row in csv.reader(open('labeledTestSet.csv','r')):
-			body = {'input': {'csvInstance': row}}
-			result = papi.predict(
-				body=body, id=flags.model_id, project=flags.project_id).execute()
-			print('Prediction results for "%s"...' % row)
-			pprint.pprint(result)
-			csvwriter.writerow([result['outputValue']])
-
-		# Delete model.
-		print_header('Deleting model')
-		result = papi.delete(id=flags.model_id, project=flags.project_id).execute()
-		print('Model deleted.\n')
-		
-		
+		calls = {
+			"list": listModels,
+			"train": trainThenWait,
+			"describe": describeModel,
+			"predict": makePredictions,
+			"delete": deleteModel,
+			"everything": everything
+		}
+		calls[flags.api_call](papi, flags)
 
 	except client.AccessTokenRefreshError:
 		print ('The credentials have been revoked or expired, please re-run '
