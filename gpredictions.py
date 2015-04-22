@@ -100,14 +100,14 @@ def makePredictions(papi, flags):
 	# Make some predictions using the newly trained model.
 	print_header('Making some predictions')
 	csvwriter = csv.writer(open('results.csv', 'wb'))
-	for row in csv.reader(open('labeledTestSet.csv','r')):
+	for row in csv.reader(open('test.csv','r')):
 		body = {'input': {'csvInstance': row}}
 		result = papi.predict(
 			body=body, id=flags.model_id, project=flags.project_id).execute()
-		print('Prediction results for "%s"...' % row)
-		pprint.pprint(result)
+		#print('Prediction results for "%s"...' % row)
+		#pprint.pprint(result)
 		csvwriter.writerow([result['outputValue']])
-		
+
 def deleteModel(papi, flags):
 	# Delete model.
 	print_header('Deleting model')
@@ -126,11 +126,12 @@ def main(argv):
 	# or if you change the list of scopes below, revoke your app's permission
 	# here: https://accounts.google.com/IssuedAuthSubTokens
 	# Then re-run the app to re-authorize it.
-	service, flags = sample_tools.init(
-			argv, 'prediction', 'v1.6', __doc__, __file__, parents=[argparser],
-			scope=(
-					'https://www.googleapis.com/auth/prediction',
-					'https://www.googleapis.com/auth/devstorage.read_only'))
+	service, flags = sample_tools.init(argv, 'prediction', 'v1.6', __doc__, __file__, parents=[argparser],
+		scope = (
+			'https://www.googleapis.com/auth/prediction',
+			'https://www.googleapis.com/auth/devstorage.read_only'
+		)
+	)
 
 	try:
 		# Get access to the Prediction API.
