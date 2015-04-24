@@ -7,7 +7,7 @@ the same thing as the Hello Prediction! example. You might want to run
 the setup.sh script to load the sample data to Google Storage.
 
 Usage:
-	$ python prediction.py "bucket/object" "model_id" "project_id"
+	$ python prediction.py "bucket/object" "model_id" "project_id" "api_call"
 
 You can also get help on all the command-line flags the program understands
 by running:

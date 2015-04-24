@@ -10,6 +10,6 @@ else:
 	n = len(results)
 	plt.plot(range(n), [float(  truth[i][0]) for i in range(n)])
 	plt.plot(range(n), [float(results[i][0]) for i in range(n)])
-	plt.ylabel('Score')
+	plt.ylabel('Bicycle Rentals')
 	plt.xlabel('Time')
 	plt.show()
